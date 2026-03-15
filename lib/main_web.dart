@@ -1,3 +1,4 @@
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:nextoffice/core/services/JsService/provider/js_provider.dart'
     deferred as js_provider;
 import 'package:firebase_core/firebase_core.dart' deferred as firebase_core;
@@ -122,7 +123,10 @@ class _MyWebAppState extends State<MyWebApp> {
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
             locale: localizationState.locale.value,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: [
+              ...AppLocalizations.localizationsDelegates,
+              FlutterQuillLocalizations.delegate,
+            ],
             supportedLocales: LocalizationUtils.supportedLocales,
             title: TextUtils.appTitle,
             scrollBehavior: const MaterialScrollBehavior().copyWith(

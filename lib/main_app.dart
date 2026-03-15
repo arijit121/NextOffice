@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:app_links/app_links.dart';
 import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:nextoffice/firebase_options.dart';
@@ -181,7 +181,10 @@ class _MyAppState extends State<MyApp> {
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
             locale: localizationState.locale.value,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: [
+              ...AppLocalizations.localizationsDelegates,
+              FlutterQuillLocalizations.delegate,
+            ],
             supportedLocales: LocalizationUtils.supportedLocales,
             title: TextUtils.appTitle,
             themeMode: ThemeMode.system,
