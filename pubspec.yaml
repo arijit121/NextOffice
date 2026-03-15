@@ -101,7 +101,10 @@ dependencies:
   flame_forge2d: ^0.19.2
   flame_svg: ^1.11.16
   gif_view: ^1.0.3
-  syncfusion_flutter_pdfviewer: ^32.1.21
+  syncfusion_flutter_pdfviewer: ^32.2.9
+  syncfusion_flutter_datagrid: ^32.2.9
+  syncfusion_flutter_xlsio: ^32.2.9
+  syncfusion_officecore: ^32.2.9
   icons_plus: ^5.0.0
   feather_icons: ^1.2.0
 

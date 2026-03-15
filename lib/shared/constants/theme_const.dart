@@ -60,22 +60,32 @@ class ThemeConst {
   );
 
   static ThemeData theme = ThemeData(
+    useMaterial3: true,
     pageTransitionsTheme: kIsWeb ? NoTransitionsOnWeb() : null,
-    colorSchemeSeed: ColorConst.baseHexColor,
-    scaffoldBackgroundColor:
-        Color.lerp(ColorConst.baseHexColor, Colors.white, .95),
-    brightness: Brightness.light,
-    appBarTheme: appBarTheme,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: ColorConst.violate,
+      brightness: Brightness.light,
+    ),
+    scaffoldBackgroundColor: ColorConst.scaffoldBg,
+    appBarTheme: appBarTheme.copyWith(
+      backgroundColor: ColorConst.violate,
+      foregroundColor: Colors.white,
+    ),
     textTheme: textTheme,
   );
 
   static ThemeData darkTheme = ThemeData(
+    useMaterial3: true,
     pageTransitionsTheme: kIsWeb ? NoTransitionsOnWeb() : null,
-    colorSchemeSeed: ColorConst.baseHexColor,
-    scaffoldBackgroundColor:
-        Color.lerp(ColorConst.baseHexColor, Colors.white, .95),
-    brightness: Brightness.dark,
-    appBarTheme: appBarTheme,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: ColorConst.violate,
+      brightness: Brightness.dark,
+    ),
+    scaffoldBackgroundColor: const Color(0xFF0F172A),
+    appBarTheme: appBarTheme.copyWith(
+      backgroundColor: const Color(0xFF1E293B),
+      foregroundColor: Colors.white,
+    ),
     textTheme: textTheme,
   );
 }
