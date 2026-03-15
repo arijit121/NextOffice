@@ -29,16 +29,19 @@ class RedirectEngine {
             routerManager.router.go(location);
           } else {
             switch (location) {
-              case RouteName.initialView:
+              case RouteName.dashboard:
                 routerManager.router.goNamed(location);
                 break;
-              case RouteName.leaderBoard:
+              case RouteName.fileManager:
                 routerManager.router.goNamed(location);
                 break;
-              case RouteName.order:
+              case RouteName.docs:
                 routerManager.router.goNamed(location);
                 break;
-              case RouteName.games:
+              case RouteName.sheets:
+                routerManager.router.goNamed(location);
+                break;
+              case RouteName.slides:
                 routerManager.router.goNamed(location);
                 break;
               default:

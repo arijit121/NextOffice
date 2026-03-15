@@ -1,0 +1,252 @@
+You are a senior Flutter architect.
+
+Design and implement a cross-platform offline office suite called "NextOffice".
+
+The application must run on:
+
+- Windows
+- macOS
+- Linux
+- Android
+- iOS
+- Web
+
+The system must NOT use any backend server. All documents must be stored locally on the device.
+
+The application must be modular and scalable.
+
+------------------------------------------------
+
+PROJECT NAME
+NextOffice
+
+------------------------------------------------
+
+MAIN MODULES
+
+1. NextOffice Docs (Word Processor)
+
+Create a rich text editor similar to Microsoft Word.
+
+Features:
+
+Text formatting
+- bold
+- italic
+- underline
+- strikethrough
+- font family
+- font size
+- text color
+- highlight
+
+Paragraph tools
+- alignment
+- indentation
+- line spacing
+
+Lists
+- bullet lists
+- numbered lists
+- checklist
+
+Insert elements
+- images
+- tables
+- hyperlinks
+
+Document tools
+- headers
+- footers
+- page numbers
+- margins
+
+Editing tools
+- undo
+- redo
+- find
+- replace
+
+Export formats
+- DOCX
+- PDF
+- HTML
+- Markdown
+
+Import formats
+- DOCX
+- TXT
+- HTML
+
+------------------------------------------------
+
+2. NextOffice Sheets (Spreadsheet)
+
+Spreadsheet grid similar to Excel.
+
+Features:
+
+Cell editing
+Cell formatting
+- number
+- currency
+- percentage
+
+Formula engine supporting
+
+SUM()
+AVERAGE()
+COUNT()
+MIN()
+MAX()
+IF()
+
+Spreadsheet tools
+
+- sorting
+- filtering
+- freeze rows
+- freeze columns
+
+Charts
+
+- bar chart
+- line chart
+- pie chart
+
+File formats
+
+Import
+- XLSX
+- CSV
+
+Export
+- XLSX
+- CSV
+- PDF
+
+------------------------------------------------
+
+3. NextOffice Slides (Presentation)
+
+Features
+
+Slide editor
+Slide templates
+Themes
+
+Insert elements
+
+- text
+- images
+- shapes
+- charts
+
+Animations
+Transitions
+
+Presentation mode (fullscreen)
+
+Export formats
+
+- PPTX
+- PDF
+- PNG images
+
+------------------------------------------------
+
+4. NextOffice File Manager
+
+Local file explorer inside the app.
+
+Features
+
+Create folders
+Rename files
+Delete files
+Move files
+
+Supported formats
+
+.nextdoc
+.nextsheet
+.nextslide
+
+Recent documents
+
+Auto-save system
+
+------------------------------------------------
+
+LOCAL STORAGE
+
+Use platform-specific storage.
+
+Mobile
+- application documents directory
+
+Desktop
+- local file system
+
+Web
+- IndexedDB or local storage
+
+Files should use JSON-based formats.
+
+Example document structure
+
+{
+  "type": "doc",
+  "version": 1,
+  "content": [],
+  "styles": {},
+  "metadata": {
+    "created": "",
+    "modified": ""
+  }
+}
+
+------------------------------------------------
+
+UI DESIGN
+
+Modern productivity interface similar to office software.
+
+Layout
+
+Top ribbon toolbar
+Left navigation panel
+Main editing area
+Bottom status bar
+
+Features
+
+Dark mode
+Light mode
+Tabs for multiple documents
+Keyboard shortcuts
+
+------------------------------------------------
+
+PERFORMANCE
+
+The system must
+
+Support large documents
+Auto-save every few seconds
+Maintain undo history
+Work fully offline
+
+------------------------------------------------
+
+DELIVERABLES
+
+Provide:
+
+1. Flutter project architecture
+2. Folder structure
+3. State management design
+4. Data models
+5. File storage system
+6. UI component tree
+7. Code examples for Docs, Sheets, and Slides modules
