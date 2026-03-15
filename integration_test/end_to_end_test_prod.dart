@@ -1,4 +1,4 @@
-import 'package:dbnus/flavors.dart';
+import 'package:nextoffice/flavors.dart';
 
 import 'end_to_end_test.dart' as app;
 

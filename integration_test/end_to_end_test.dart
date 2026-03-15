@@ -1,9 +1,9 @@
-import 'package:dbnus/flavors.dart';
-import 'package:dbnus/main_prod.dart' as app_prod;
-import 'package:dbnus/main_dev.dart' as app_dev;
-import 'package:dbnus/main_stg.dart' as app_stg;
-// import 'package:dbnus/router/router_name.dart';
-// import 'package:dbnus/utils/text_utils.dart';
+import 'package:nextoffice/flavors.dart';
+import 'package:nextoffice/main_prod.dart' as app_prod;
+import 'package:nextoffice/main_dev.dart' as app_dev;
+import 'package:nextoffice/main_stg.dart' as app_stg;
+// import 'package:nextoffice/router/router_name.dart';
+// import 'package:nextoffice/utils/text_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
