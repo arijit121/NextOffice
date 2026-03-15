@@ -1,0 +1,36 @@
+app:
+  android:
+    flavorDimensions: "flavor-type"
+
+flavors:
+  prod:
+    app:
+      name: "NextOffice"
+    android:
+      applicationId: "com.nextoffice.app"
+    ios:
+      bundleId: "com.nextoffice.app"
+    macos:
+      bundleId: "com.nextoffice.app"
+
+  stg:
+    app:
+      name: "Stg NextOffice"
+    android:
+      applicationId: "com.nextoffice.app.stg"
+    ios:
+      bundleId: "com.nextoffice.app.stg"
+    macos:
+      bundleId: "com.nextoffice.app.stg" 
+      
+  dev:
+    app:
+      name: "Dev NextOffice"
+    android:
+      applicationId: "com.nextoffice.app.dev"
+    ios:
+      bundleId: "com.nextoffice.app.dev"
+    macos:
+      bundleId: "com.nextoffice.app.dev"
+
+ide: idea
