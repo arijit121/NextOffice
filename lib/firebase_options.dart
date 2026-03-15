@@ -41,53 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDdGpKs-t8Ee4tr4GsaEavhureueb2O4zM',
-    appId: '1:783534429855:web:cc78ab29a1b67306e6f4aa',
-    messagingSenderId: '783534429855',
-    projectId: 'nextoffice-df986',
-    authDomain: 'nextoffice-df986.firebaseapp.com',
-    databaseURL: 'https://nextoffice-df986-default-rtdb.firebaseio.com',
-    storageBucket: 'nextoffice-df986.firebasestorage.app',
-    measurementId: 'G-8YSKF8B4G1',
+    apiKey: 'AIzaSyAEVtwidTOSSx5XjYEteDDSDKAHfwCz-WQ',
+    appId: '1:96573718732:web:a32e6daf86bd8905028269',
+    messagingSenderId: '96573718732',
+    projectId: 'nextoffice-4a398',
+    authDomain: 'nextoffice-4a398.firebaseapp.com',
+    storageBucket: 'nextoffice-4a398.firebasestorage.app',
+    measurementId: 'G-28XRZJZES4',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDrLI6sP4HuEqJgGlul9NzE7XyfVl7Es9w',
-    appId: '1:783534429855:android:3cef16b71551f7a6e6f4aa',
-    messagingSenderId: '783534429855',
-    projectId: 'nextoffice-df986',
-    databaseURL: 'https://nextoffice-df986-default-rtdb.firebaseio.com',
-    storageBucket: 'nextoffice-df986.firebasestorage.app',
+    apiKey: 'AIzaSyAGvzqffGmUsfAuITlr3lXynZxVm2ZEgws',
+    appId: '1:96573718732:android:afdf43ca2697312f028269',
+    messagingSenderId: '96573718732',
+    projectId: 'nextoffice-4a398',
+    storageBucket: 'nextoffice-4a398.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAxw1WbItbE1GEOJWiI8yCTLQ3sFQ93llA',
-    appId: '1:783534429855:ios:e6e5b4e3be87d740e6f4aa',
-    messagingSenderId: '783534429855',
-    projectId: 'nextoffice-df986',
-    databaseURL: 'https://nextoffice-df986-default-rtdb.firebaseio.com',
-    storageBucket: 'nextoffice-df986.firebasestorage.app',
+    apiKey: 'AIzaSyAzFuAOLgLt2_d_xMC7iwxEeEyyO_H6Rwg',
+    appId: '1:96573718732:ios:78ce0577471a766e028269',
+    messagingSenderId: '96573718732',
+    projectId: 'nextoffice-4a398',
+    storageBucket: 'nextoffice-4a398.firebasestorage.app',
     iosBundleId: 'com.nextoffice.app.stg',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAxw1WbItbE1GEOJWiI8yCTLQ3sFQ93llA',
-    appId: '1:783534429855:ios:7003b2b4c3048f9de6f4aa',
-    messagingSenderId: '783534429855',
-    projectId: 'nextoffice-df986',
-    databaseURL: 'https://nextoffice-df986-default-rtdb.firebaseio.com',
-    storageBucket: 'nextoffice-df986.firebasestorage.app',
+    apiKey: 'AIzaSyAzFuAOLgLt2_d_xMC7iwxEeEyyO_H6Rwg',
+    appId: '1:96573718732:ios:867fdf0c2be1fc8e028269',
+    messagingSenderId: '96573718732',
+    projectId: 'nextoffice-4a398',
+    storageBucket: 'nextoffice-4a398.firebasestorage.app',
     iosBundleId: 'com.nextoffice.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDWoA9iCdpB8hkSZW20KGXX4rzcLv21cLQ',
-    appId: '1:783534429855:web:a259db0dd9a7b318e6f4aa',
-    messagingSenderId: '783534429855',
-    projectId: 'nextoffice-df986',
-    authDomain: 'nextoffice-df986.firebaseapp.com',
-    databaseURL: 'https://nextoffice-df986-default-rtdb.firebaseio.com',
-    storageBucket: 'nextoffice-df986.firebasestorage.app',
-    measurementId: 'G-K53JP17WSN',
+    apiKey: 'AIzaSyAEVtwidTOSSx5XjYEteDDSDKAHfwCz-WQ',
+    appId: '1:96573718732:web:81fbdb74847dfcd9028269',
+    messagingSenderId: '96573718732',
+    projectId: 'nextoffice-4a398',
+    authDomain: 'nextoffice-4a398.firebaseapp.com',
+    storageBucket: 'nextoffice-4a398.firebasestorage.app',
+    measurementId: 'G-ZPFTZDVB4K',
   );
+
 }

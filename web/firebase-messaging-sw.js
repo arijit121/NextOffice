@@ -3,14 +3,13 @@ importScripts("https://www.gstatic.com/firebasejs/10.11.1/firebase-messaging-com
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDdGpKs-t8Ee4tr4GsaEavhureueb2O4zM",
-  authDomain: "nextoffice-df986.firebaseapp.com",
-  databaseURL: "https://nextoffice-df986.firebaseio.com",
-  projectId: "nextoffice-df986",
-  storageBucket: "nextoffice-df986.appspot.com",
-  messagingSenderId: "783534429855",
-  appId: "1:783534429855:web:cc78ab29a1b67306e6f4aa",
-  measurementId: "G-8YSKF8B4G1"
+  apiKey: "AIzaSyAEVtwidTOSSx5XjYEteDDSDKAHfwCz-WQ",
+  authDomain: "nextoffice-4a398.firebaseapp.com",
+  projectId: "nextoffice-4a398",
+  storageBucket: "nextoffice-4a398.firebasestorage.app",
+  messagingSenderId: "96573718732",
+  appId: "1:96573718732:web:a32e6daf86bd8905028269",
+  measurementId: "G-28XRZJZES4"
 };
 firebase.initializeApp(firebaseConfig);
 
