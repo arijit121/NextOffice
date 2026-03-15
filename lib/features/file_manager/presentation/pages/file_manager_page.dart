@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nextoffice/navigation/custom_router/custom_route.dart';
+import 'package:nextoffice/navigation/router_name.dart';
 import 'package:nextoffice/shared/constants/color_const.dart';
 
 class FileManagerPage extends StatefulWidget {
@@ -9,26 +10,43 @@ class FileManagerPage extends StatefulWidget {
   State<FileManagerPage> createState() => _FileManagerPageState();
 }
 
+class _FileItem {
+  String name;
+  final String type; // folder, doc, sheet, slide
+  final DateTime createdAt;
+  final IconData icon;
+  final Color color;
+
+  _FileItem({
+    required this.name,
+    required this.type,
+    required this.createdAt,
+    required this.icon,
+    required this.color,
+  });
+}
+
 class _FileManagerPageState extends State<FileManagerPage>
     with SingleTickerProviderStateMixin {
   bool _isGridView = true;
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String _sortBy = 'name'; // name, date, type
 
-  static const List<String> _categories = [
-    'All',
-    'Docs',
-    'Sheets',
-    'Slides',
-  ];
+  static const List<String> _categories = ['All', 'Docs', 'Sheets', 'Slides'];
 
-  // Empty file list — files will be added via local storage later
-  final List<Map<String, dynamic>> _files = [];
+  final List<_FileItem> _files = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _categories.length, vsync: this);
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim().toLowerCase();
+      });
+    });
   }
 
   @override
@@ -36,6 +54,410 @@ class _FileManagerPageState extends State<FileManagerPage>
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  List<_FileItem> _filteredFiles(String category) {
+    var list = _files.toList();
+
+    // Filter by category
+    if (category != 'All') {
+      final type = category.toLowerCase();
+      // Map category to types
+      final typeMap = {
+        'docs': 'doc',
+        'sheets': 'sheet',
+        'slides': 'slide',
+      };
+      list = list
+          .where((f) => f.type == typeMap[type] || f.type == 'folder')
+          .toList();
+    }
+
+    // Filter by search
+    if (_searchQuery.isNotEmpty) {
+      list = list
+          .where((f) => f.name.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
+
+    // Sort
+    switch (_sortBy) {
+      case 'name':
+        list.sort((a, b) => a.name.compareTo(b.name));
+        break;
+      case 'date':
+        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        break;
+      case 'type':
+        list.sort((a, b) => a.type.compareTo(b.type));
+        break;
+    }
+
+    return list;
+  }
+
+  void _createFolder() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Folder'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Folder name',
+            prefixIcon: Icon(Icons.folder_rounded),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  _files.add(_FileItem(
+                    name: name,
+                    type: 'folder',
+                    createdAt: DateTime.now(),
+                    icon: Icons.folder_rounded,
+                    color: Colors.amber.shade700,
+                  ));
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _createDocument() {
+    final controller = TextEditingController(text: 'Untitled Document');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Document'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Document name',
+            prefixIcon: Icon(Icons.description_rounded),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  _files.add(_FileItem(
+                    name: name,
+                    type: 'doc',
+                    createdAt: DateTime.now(),
+                    icon: Icons.description_rounded,
+                    color: Colors.blue,
+                  ));
+                });
+                Navigator.pop(ctx);
+                CustomRoute.navigateNamed(RouteName.docs);
+              }
+            },
+            child: const Text('Create & Open'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _createSpreadsheet() {
+    final controller = TextEditingController(text: 'Untitled Spreadsheet');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Spreadsheet'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Spreadsheet name',
+            prefixIcon: Icon(Icons.table_chart_rounded),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  _files.add(_FileItem(
+                    name: name,
+                    type: 'sheet',
+                    createdAt: DateTime.now(),
+                    icon: Icons.table_chart_rounded,
+                    color: Colors.green,
+                  ));
+                });
+                Navigator.pop(ctx);
+                CustomRoute.navigateNamed(RouteName.sheets);
+              }
+            },
+            child: const Text('Create & Open'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _createPresentation() {
+    final controller = TextEditingController(text: 'Untitled Presentation');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Presentation'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Presentation name',
+            prefixIcon: Icon(Icons.slideshow_rounded),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  _files.add(_FileItem(
+                    name: name,
+                    type: 'slide',
+                    createdAt: DateTime.now(),
+                    icon: Icons.slideshow_rounded,
+                    color: Colors.orange,
+                  ));
+                });
+                Navigator.pop(ctx);
+                CustomRoute.navigateNamed(RouteName.slides);
+              }
+            },
+            child: const Text('Create & Open'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _renameFile(int index) {
+    final controller = TextEditingController(text: _files[index].name);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Rename'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'New name',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                setState(() {
+                  _files[index].name = name;
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteFile(int index) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete File'),
+        content: Text('Delete "${_files[index].name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              setState(() {
+                _files.removeAt(index);
+              });
+              Navigator.pop(ctx);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openFile(_FileItem file) {
+    switch (file.type) {
+      case 'doc':
+        CustomRoute.navigateNamed(RouteName.docs);
+        break;
+      case 'sheet':
+        CustomRoute.navigateNamed(RouteName.sheets);
+        break;
+      case 'slide':
+        CustomRoute.navigateNamed(RouteName.slides);
+        break;
+      case 'folder':
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Opened folder "${file.name}"'),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        break;
+    }
+  }
+
+  void _showSortOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Sort By',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          RadioListTile<String>(
+            title: const Text('Name'),
+            value: 'name',
+            groupValue: _sortBy,
+            onChanged: (v) {
+              setState(() => _sortBy = v!);
+              Navigator.pop(ctx);
+            },
+          ),
+          RadioListTile<String>(
+            title: const Text('Date Created'),
+            value: 'date',
+            groupValue: _sortBy,
+            onChanged: (v) {
+              setState(() => _sortBy = v!);
+              Navigator.pop(ctx);
+            },
+          ),
+          RadioListTile<String>(
+            title: const Text('Type'),
+            value: 'type',
+            groupValue: _sortBy,
+            onChanged: (v) {
+              setState(() => _sortBy = v!);
+              Navigator.pop(ctx);
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  void _showFileContextMenu(int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final file = _files[index];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(file.icon, color: file.color),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(file.name,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.open_in_new_rounded),
+            title: const Text('Open'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _openFile(file);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit_rounded),
+            title: const Text('Rename'),
+            onTap: () {
+              Navigator.pop(ctx);
+              _renameFile(index);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_rounded, color: Colors.red),
+            title: const Text('Delete', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              Navigator.pop(ctx);
+              _deleteFile(index);
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
   }
 
   @override
@@ -65,7 +487,7 @@ class _FileManagerPageState extends State<FileManagerPage>
           ),
           IconButton(
             icon: const Icon(Icons.sort_rounded),
-            onPressed: () {},
+            onPressed: _showSortOptions,
             tooltip: 'Sort',
           ),
           const SizedBox(width: 8),
@@ -94,6 +516,12 @@ class _FileManagerPageState extends State<FileManagerPage>
                   Icons.search_rounded,
                   color: isDark ? Colors.white38 : Colors.grey.shade400,
                 ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded),
+                        onPressed: () => _searchController.clear(),
+                      )
+                    : null,
                 filled: true,
                 fillColor: isDark
                     ? Colors.white.withOpacity(0.06)
@@ -139,8 +567,15 @@ class _FileManagerPageState extends State<FileManagerPage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children:
-                  _categories.map((_) => _buildFileContent(isDark)).toList(),
+              children: _categories.map((cat) {
+                final filtered = _filteredFiles(cat);
+                if (filtered.isEmpty) {
+                  return _buildEmptyState(isDark);
+                }
+                return _isGridView
+                    ? _buildGridView(filtered, isDark)
+                    : _buildListView(filtered, isDark);
+              }).toList(),
             ),
           ),
         ],
@@ -156,12 +591,76 @@ class _FileManagerPageState extends State<FileManagerPage>
     );
   }
 
-  Widget _buildFileContent(bool isDark) {
-    if (_files.isEmpty) {
-      return _buildEmptyState(isDark);
-    }
-    // Future: render actual file grid/list
-    return _buildEmptyState(isDark);
+  Widget _buildGridView(List<_FileItem> files, bool isDark) {
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 900
+        ? 5
+        : width > 600
+            ? 4
+            : 2;
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1,
+      ),
+      itemCount: files.length,
+      itemBuilder: (context, index) {
+        final fileIndex = _files.indexOf(files[index]);
+        return _FileGridTile(
+          file: files[index],
+          isDark: isDark,
+          onTap: () => _openFile(files[index]),
+          onLongPress: () => _showFileContextMenu(fileIndex),
+        );
+      },
+    );
+  }
+
+  Widget _buildListView(List<_FileItem> files, bool isDark) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: files.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 4),
+      itemBuilder: (context, index) {
+        final file = files[index];
+        final fileIndex = _files.indexOf(file);
+        return ListTile(
+          onTap: () => _openFile(file),
+          onLongPress: () => _showFileContextMenu(fileIndex),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: file.color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(file.icon, color: file.color, size: 24),
+          ),
+          title: Text(
+            file.name,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
+            ),
+          ),
+          subtitle: Text(
+            '${file.type.toUpperCase()} • ${_formatDate(file.createdAt)}',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white38 : Colors.grey.shade500,
+            ),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.more_vert_rounded),
+            onPressed: () => _showFileContextMenu(fileIndex),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildEmptyState(bool isDark) {
@@ -184,7 +683,7 @@ class _FileManagerPageState extends State<FileManagerPage>
           ),
           const SizedBox(height: 20),
           Text(
-            'No files yet',
+            _searchQuery.isNotEmpty ? 'No results found' : 'No files yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -193,7 +692,9 @@ class _FileManagerPageState extends State<FileManagerPage>
           ),
           const SizedBox(height: 8),
           Text(
-            'Create documents, sheets, or slides\nto get started',
+            _searchQuery.isNotEmpty
+                ? 'Try a different search term'
+                : 'Create documents, sheets, or slides\nto get started',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -201,20 +702,23 @@ class _FileManagerPageState extends State<FileManagerPage>
               color: isDark ? Colors.white30 : Colors.grey.shade400,
             ),
           ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: _showCreateDialog,
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Create New'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: ColorConst.violate,
-              side: BorderSide(color: ColorConst.violate.withOpacity(0.5)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          if (_searchQuery.isEmpty) ...[
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: _showCreateDialog,
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Create New'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: ColorConst.violate,
+                side: BorderSide(color: ColorConst.violate.withOpacity(0.5)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -249,7 +753,10 @@ class _FileManagerPageState extends State<FileManagerPage>
               label: 'New Folder',
               color: Colors.amber.shade700,
               isDark: isDark,
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context);
+                _createFolder();
+              },
             ),
             _CreateOption(
               icon: Icons.description_rounded,
@@ -258,7 +765,7 @@ class _FileManagerPageState extends State<FileManagerPage>
               isDark: isDark,
               onTap: () {
                 Navigator.pop(context);
-                CustomRoute.navigateNamed('docs');
+                _createDocument();
               },
             ),
             _CreateOption(
@@ -268,7 +775,7 @@ class _FileManagerPageState extends State<FileManagerPage>
               isDark: isDark,
               onTap: () {
                 Navigator.pop(context);
-                CustomRoute.navigateNamed('sheets');
+                _createSpreadsheet();
               },
             ),
             _CreateOption(
@@ -278,11 +785,94 @@ class _FileManagerPageState extends State<FileManagerPage>
               isDark: isDark,
               onTap: () {
                 Navigator.pop(context);
-                CustomRoute.navigateNamed('slides');
+                _createPresentation();
               },
             ),
             const SizedBox(height: 8),
           ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
+    if (diff.inDays < 1) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━ Widgets ━━━━━━━━━━━━━━━━━━
+
+class _FileGridTile extends StatelessWidget {
+  final _FileItem file;
+  final bool isDark;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _FileGridTile({
+    required this.file,
+    required this.isDark,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? Colors.white10 : file.color.withOpacity(0.12),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: file.color.withOpacity(isDark ? 0.2 : 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(file.icon, size: 28, color: file.color),
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  file.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                file.type.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isDark ? Colors.white38 : Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
