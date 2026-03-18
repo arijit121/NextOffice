@@ -1,9 +1,14 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:nextoffice/features/shared/data/local_storage_service.dart';
 import 'package:nextoffice/navigation/custom_router/custom_route.dart';
 import 'package:nextoffice/shared/constants/color_const.dart';
 
 class SlidesPage extends StatefulWidget {
-  const SlidesPage({super.key});
+  final String? fileId;
+  const SlidesPage({super.key, this.fileId});
 
   @override
   State<SlidesPage> createState() => _SlidesPageState();
@@ -11,9 +16,38 @@ class SlidesPage extends StatefulWidget {
 
 class _SlidesPageState extends State<SlidesPage> {
   int _selectedSlide = 0;
-  final TextEditingController _titleController = TextEditingController(
-    text: 'Untitled Presentation',
-  );
+  final LocalStorageService _storage = LocalStorageService();
+  LocalFileData? _localFile;
+  final TextEditingController _titleController = TextEditingController(text: 'Untitled Presentation');
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadPresentation();
+  }
+
+  Future<void> _loadPresentation() async {
+    if (widget.fileId == null) return;
+    final file = await _storage.getFile(widget.fileId!);
+    if (file != null && mounted) {
+      setState(() {
+        _localFile = file;
+        _titleController.text = file.name;
+      });
+      if (file.payload.isNotEmpty) {
+        try {
+          final List<dynamic> decoded = jsonDecode(file.payload);
+          setState(() {
+            _slides.clear();
+            _slides.addAll(decoded.map((s) => _SlideData.fromJson(s)).toList());
+          });
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+    }
+  }
+
 
   final List<_SlideData> _slides = [
     _SlideData(
@@ -44,6 +78,38 @@ class _SlidesPageState extends State<SlidesPage> {
         duration: const Duration(seconds: 1),
       ),
     );
+  }
+
+  Future<void> _savePresentation() async {
+    final title = _titleController.text.trim();
+    final jsonString = jsonEncode(_slides.map((s) => s.toJson()).toList());
+    
+    if (_localFile != null) {
+      _localFile!.name = title.isEmpty ? "Untitled Presentation" : title;
+      _localFile!.payload = jsonString;
+      await _storage.saveFile(_localFile!);
+    } else {
+      final newFile = LocalFileData(
+        id: _storage.generateId(),
+        name: title.isEmpty ? "Untitled Presentation" : title,
+        type: 'slide',
+        createdAt: DateTime.now(),
+        payload: jsonString,
+      );
+      await _storage.saveFile(newFile);
+      setState(() => _localFile = newFile);
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Presentation "${title.isEmpty ? "Untitled Presentation" : title}" saved'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _deleteSlide(int index) {
@@ -163,6 +229,32 @@ class _SlidesPageState extends State<SlidesPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final xfile = await picker.pickImage(source: ImageSource.gallery);
+      if (xfile != null) {
+        setState(() {
+          _slides[_selectedSlide].elements.add({
+            'type': 'image',
+            'path': xfile.path,
+            'x': 0.3,
+            'y': 0.3,
+          });
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick image: ${e.toString()}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _addTextElement() {
@@ -357,18 +449,6 @@ class _SlidesPageState extends State<SlidesPage> {
     );
   }
 
-  void _savePresentation() {
-    final title = _titleController.text.trim();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            'Presentation "${title.isEmpty ? "Untitled" : title}" saved'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -404,6 +484,7 @@ class _SlidesPageState extends State<SlidesPage> {
               hintText: 'Presentation title...',
               hintStyle: TextStyle(color: Colors.white54),
               isDense: true,
+              contentPadding: EdgeInsets.symmetric(vertical: 8),
             ),
           ),
         ),
@@ -443,16 +524,7 @@ class _SlidesPageState extends State<SlidesPage> {
                 children: [
                   _ToolButton(
                       Icons.text_fields_rounded, 'Text', isDark, _addTextElement),
-                  _ToolButton(Icons.image_rounded, 'Image', isDark, () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Image picker — coming soon'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    );
-                  }),
+                  _ToolButton(Icons.image_rounded, 'Image', isDark, _pickImage),
                   _ToolButton(
                       Icons.crop_square_rounded, 'Shape', isDark, _addShape),
                   _ToolButton(Icons.bar_chart_rounded, 'Chart', isDark, () {
@@ -892,6 +964,22 @@ class _SlidesPageState extends State<SlidesPage> {
           ),
         );
       }
+    } else if (type == 'image') {
+      final path = elem['path'] as String;
+      return Container(
+        width: 150,
+        height: 150,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: path.startsWith('http')
+              ? Image.network(path, fit: BoxFit.cover)
+              : Image.file(File(path), fit: BoxFit.cover),
+        ),
+      );
     }
     return const SizedBox.shrink();
   }
@@ -1046,6 +1134,20 @@ class _SlideData {
     required this.bgColor,
     required this.elements,
   });
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'subtitle': subtitle,
+        'bgColor': bgColor.value,
+        'elements': elements,
+      };
+
+  factory _SlideData.fromJson(Map<String, dynamic> json) => _SlideData(
+        title: json['title'] as String,
+        subtitle: json['subtitle'] as String,
+        bgColor: Color(json['bgColor'] as int),
+        elements: List<Map<String, dynamic>>.from(json['elements']),
+      );
 }
 
 class _TrianglePainter extends CustomPainter {

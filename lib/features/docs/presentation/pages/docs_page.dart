@@ -1,17 +1,22 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:nextoffice/features/shared/data/local_storage_service.dart';
 import 'package:nextoffice/navigation/custom_router/custom_route.dart';
 import 'package:nextoffice/shared/constants/color_const.dart';
 
 class DocsPage extends StatefulWidget {
-  const DocsPage({super.key});
+  final String? fileId;
+  const DocsPage({super.key, this.fileId});
 
   @override
   State<DocsPage> createState() => _DocsPageState();
 }
 
 class _DocsPageState extends State<DocsPage> {
-  late final QuillController _controller;
+  late QuillController _controller;
+  final LocalStorageService _storage = LocalStorageService();
+  LocalFileData? _localFile;
   final FocusNode _editorFocusNode = FocusNode();
   final ScrollController _editorScrollController = ScrollController();
   final TextEditingController _titleController = TextEditingController(
@@ -25,6 +30,36 @@ class _DocsPageState extends State<DocsPage> {
     super.initState();
     _controller = QuillController.basic();
     _controller.addListener(_updateWordCount);
+    _loadDocument();
+  }
+
+  Future<void> _loadDocument() async {
+    if (widget.fileId == null) return;
+    final file = await _storage.getFile(widget.fileId!);
+    if (file != null && mounted) {
+      setState(() {
+        _localFile = file;
+        _titleController.text = file.name;
+      });
+      if (file.payload.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(file.payload);
+          final doc = Document.fromJson(decoded);
+          final oldController = _controller;
+          setState(() {
+            _controller = QuillController(
+              document: doc,
+              selection: const TextSelection.collapsed(offset: 0),
+            );
+          });
+          _controller.addListener(_updateWordCount);
+          oldController.dispose();
+          _updateWordCount();
+        } catch (e) {
+          // Ignore parsing errors
+        }
+      }
+    }
   }
 
   @override
@@ -44,19 +79,36 @@ class _DocsPageState extends State<DocsPage> {
     });
   }
 
-  void _saveDocument() {
-    // Serialize document to JSON for storage
+  Future<void> _saveDocument() async {
     final docJson = _controller.document.toDelta().toJson();
     final title = _titleController.text.trim();
-    // TODO: Persist to local storage
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Document "${title.isEmpty ? "Untitled" : title}" saved'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    
+    if (_localFile != null) {
+      _localFile!.name = title.isEmpty ? "Untitled" : title;
+      _localFile!.payload = jsonEncode(docJson);
+      await _storage.saveFile(_localFile!);
+    } else {
+      final newFile = LocalFileData(
+        id: _storage.generateId(),
+        name: title.isEmpty ? "Untitled Document" : title,
+        type: 'doc',
+        createdAt: DateTime.now(),
+        payload: jsonEncode(docJson),
+      );
+      await _storage.saveFile(newFile);
+      setState(() => _localFile = newFile);
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Document "${title.isEmpty ? "Untitled" : title}" saved'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _exportAsText() {

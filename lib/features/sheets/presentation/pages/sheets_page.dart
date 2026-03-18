@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
+import 'package:nextoffice/features/shared/data/local_storage_service.dart';
 import 'package:nextoffice/navigation/custom_router/custom_route.dart';
 
 class SheetsPage extends StatefulWidget {
-  const SheetsPage({super.key});
+  final String? fileId;
+  const SheetsPage({super.key, this.fileId});
 
   @override
   State<SheetsPage> createState() => _SheetsPageState();
@@ -17,10 +20,12 @@ class _SheetsPageState extends State<SheetsPage> {
   );
 
   static const int _initialRows = 20;
-  static const List<String> _columnNames = ['A', 'B', 'C', 'D', 'E', 'F'];
+  List<String> _columnNames = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   late List<List<String>> _cellData;
   String _selectedCell = 'A1';
+  final LocalStorageService _storage = LocalStorageService();
+  LocalFileData? _localFile;
 
   @override
   void initState() {
@@ -30,6 +35,33 @@ class _SheetsPageState extends State<SheetsPage> {
       (_) => List.filled(_columnNames.length, ''),
     );
     _rebuildDataSource();
+    _loadSpreadsheet();
+  }
+
+  Future<void> _loadSpreadsheet() async {
+    if (widget.fileId == null) return;
+    final file = await _storage.getFile(widget.fileId!);
+    if (file != null && mounted) {
+      setState(() {
+        _localFile = file;
+        _titleController.text = file.name;
+      });
+      if (file.payload.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(file.payload) as Map<String, dynamic>;
+          if (decoded.containsKey('columns')) {
+            _columnNames = List<String>.from(decoded['columns']);
+          }
+          if (decoded.containsKey('cells')) {
+            final List<dynamic> rows = decoded['cells'];
+            _cellData = rows.map((r) => List<String>.from(r)).toList();
+          }
+          _rebuildDataSource();
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+    }
   }
 
   void _rebuildDataSource() {
@@ -117,17 +149,40 @@ class _SheetsPageState extends State<SheetsPage> {
     );
   }
 
-  void _saveSpreadsheet() {
+  Future<void> _saveSpreadsheet() async {
     final title = _titleController.text.trim();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            Text('Spreadsheet "${title.isEmpty ? "Untitled" : title}" saved'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    final payloadMap = {
+      'columns': _columnNames,
+      'cells': _cellData,
+    };
+    final jsonString = jsonEncode(payloadMap);
+
+    if (_localFile != null) {
+      _localFile!.name = title.isEmpty ? "Untitled Spreadsheet" : title;
+      _localFile!.payload = jsonString;
+      await _storage.saveFile(_localFile!);
+    } else {
+      final newFile = LocalFileData(
+        id: _storage.generateId(),
+        name: title.isEmpty ? "Untitled Spreadsheet" : title,
+        type: 'sheet',
+        createdAt: DateTime.now(),
+        payload: jsonString,
+      );
+      await _storage.saveFile(newFile);
+      setState(() => _localFile = newFile);
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Spreadsheet "${title.isEmpty ? "Untitled Spreadsheet" : title}" saved'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _showSortDialog() {

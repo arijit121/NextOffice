@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nextoffice/features/shared/data/local_storage_service.dart';
 import 'package:nextoffice/navigation/custom_router/custom_route.dart';
 import 'package:nextoffice/navigation/router_name.dart';
 import 'package:nextoffice/shared/constants/color_const.dart';
@@ -11,6 +12,7 @@ class FileManagerPage extends StatefulWidget {
 }
 
 class _FileItem {
+  final String id;
   String name;
   final String type; // folder, doc, sheet, slide
   final DateTime createdAt;
@@ -18,12 +20,45 @@ class _FileItem {
   final Color color;
 
   _FileItem({
+    required this.id,
     required this.name,
     required this.type,
     required this.createdAt,
     required this.icon,
     required this.color,
   });
+
+  factory _FileItem.fromLocalData(LocalFileData data) {
+    IconData icon;
+    Color color;
+    switch (data.type) {
+      case 'doc':
+        icon = Icons.description_rounded;
+        color = Colors.blue;
+        break;
+      case 'sheet':
+        icon = Icons.table_chart_rounded;
+        color = Colors.green;
+        break;
+      case 'slide':
+        icon = Icons.slideshow_rounded;
+        color = Colors.orange;
+        break;
+      case 'folder':
+      default:
+        icon = Icons.folder_rounded;
+        color = Colors.amber.shade700;
+        break;
+    }
+    return _FileItem(
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      createdAt: data.createdAt,
+      icon: icon,
+      color: color,
+    );
+  }
 }
 
 class _FileManagerPageState extends State<FileManagerPage>
@@ -36,7 +71,8 @@ class _FileManagerPageState extends State<FileManagerPage>
 
   static const List<String> _categories = ['All', 'Docs', 'Sheets', 'Slides'];
 
-  final List<_FileItem> _files = [];
+  final LocalStorageService _storage = LocalStorageService();
+  List<_FileItem> _files = [];
 
   @override
   void initState() {
@@ -46,6 +82,14 @@ class _FileManagerPageState extends State<FileManagerPage>
       setState(() {
         _searchQuery = _searchController.text.trim().toLowerCase();
       });
+    });
+    _loadFiles();
+  }
+
+  Future<void> _loadFiles() async {
+    final localFiles = await _storage.getAllFiles();
+    setState(() {
+      _files = localFiles.map((f) => _FileItem.fromLocalData(f)).toList();
     });
   }
 
@@ -117,19 +161,13 @@ class _FileManagerPageState extends State<FileManagerPage>
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                setState(() {
-                  _files.add(_FileItem(
-                    name: name,
-                    type: 'folder',
-                    createdAt: DateTime.now(),
-                    icon: Icons.folder_rounded,
-                    color: Colors.amber.shade700,
-                  ));
-                });
-                Navigator.pop(ctx);
+                final data = LocalFileData(id: _storage.generateId(), name: name, type: 'folder', createdAt: DateTime.now());
+                await _storage.saveFile(data);
+                await _loadFiles();
+                if (mounted) Navigator.pop(ctx);
               }
             },
             child: const Text('Create'),
@@ -160,20 +198,16 @@ class _FileManagerPageState extends State<FileManagerPage>
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                setState(() {
-                  _files.add(_FileItem(
-                    name: name,
-                    type: 'doc',
-                    createdAt: DateTime.now(),
-                    icon: Icons.description_rounded,
-                    color: Colors.blue,
-                  ));
-                });
-                Navigator.pop(ctx);
-                CustomRoute.navigateNamed(RouteName.docs);
+                final data = LocalFileData(id: _storage.generateId(), name: name, type: 'doc', createdAt: DateTime.now());
+                await _storage.saveFile(data);
+                await _loadFiles();
+                if (mounted) {
+                  Navigator.pop(ctx);
+                  CustomRoute.navigateNamed(RouteName.docs);
+                }
               }
             },
             child: const Text('Create & Open'),
@@ -204,20 +238,16 @@ class _FileManagerPageState extends State<FileManagerPage>
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                setState(() {
-                  _files.add(_FileItem(
-                    name: name,
-                    type: 'sheet',
-                    createdAt: DateTime.now(),
-                    icon: Icons.table_chart_rounded,
-                    color: Colors.green,
-                  ));
-                });
-                Navigator.pop(ctx);
-                CustomRoute.navigateNamed(RouteName.sheets);
+                final data = LocalFileData(id: _storage.generateId(), name: name, type: 'sheet', createdAt: DateTime.now());
+                await _storage.saveFile(data);
+                await _loadFiles();
+                if (mounted) {
+                  Navigator.pop(ctx);
+                  CustomRoute.navigateNamed(RouteName.sheets);
+                }
               }
             },
             child: const Text('Create & Open'),
@@ -248,20 +278,16 @@ class _FileManagerPageState extends State<FileManagerPage>
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                setState(() {
-                  _files.add(_FileItem(
-                    name: name,
-                    type: 'slide',
-                    createdAt: DateTime.now(),
-                    icon: Icons.slideshow_rounded,
-                    color: Colors.orange,
-                  ));
-                });
-                Navigator.pop(ctx);
-                CustomRoute.navigateNamed(RouteName.slides);
+                final data = LocalFileData(id: _storage.generateId(), name: name, type: 'slide', createdAt: DateTime.now());
+                await _storage.saveFile(data);
+                await _loadFiles();
+                if (mounted) {
+                  Navigator.pop(ctx);
+                  CustomRoute.navigateNamed(RouteName.slides);
+                }
               }
             },
             child: const Text('Create & Open'),
@@ -291,13 +317,12 @@ class _FileManagerPageState extends State<FileManagerPage>
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                setState(() {
-                  _files[index].name = name;
-                });
-                Navigator.pop(ctx);
+                await _storage.renameFile(_files[index].id, name);
+                await _loadFiles();
+                if (mounted) Navigator.pop(ctx);
               }
             },
             child: const Text('Rename'),
@@ -320,11 +345,10 @@ class _FileManagerPageState extends State<FileManagerPage>
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              setState(() {
-                _files.removeAt(index);
-              });
-              Navigator.pop(ctx);
+            onPressed: () async {
+              await _storage.deleteFile(_files[index].id);
+              await _loadFiles();
+              if (mounted) Navigator.pop(ctx);
             },
             child: const Text('Delete'),
           ),
