@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:nextoffice/features/shared/data/local_storage_service.dart';
 import 'package:nextoffice/navigation/custom_router/custom_route.dart';
 
@@ -130,10 +131,16 @@ class _SheetsPageState extends State<SheetsPage> {
                 final name = controller.text.trim().toUpperCase();
                 if (name.isNotEmpty) {
                   Navigator.pop(context);
-                  // Note: columns are const in this implementation
+                  setState(() {
+                    _columnNames.add(name);
+                    for (var row in _cellData) {
+                      row.add('');
+                    }
+                    _rebuildDataSource();
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Column "$name" — feature coming soon'),
+                      content: Text('Column "$name" added successfully'),
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
@@ -316,13 +323,49 @@ class _SheetsPageState extends State<SheetsPage> {
   }
 
   void _insertChart() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Chart insertion — coming soon'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 2),
-      ),
+    showDialog(
+      context: context,
+      builder: (context) {
+        // Build chart data from the first two columns (up to 10 rows)
+        final List<Map<String, dynamic>> chartData = [];
+        for (var row in _cellData) {
+          if (row.length >= 2 && row[0].isNotEmpty && row[1].isNotEmpty) {
+            final val = double.tryParse(row[1]);
+            if (val != null) {
+              chartData.add({'category': row[0], 'value': val});
+            }
+          }
+          if (chartData.length >= 10) break;
+        }
+
+        return AlertDialog(
+          title: const Text('Chart Preview'),
+          content: SizedBox(
+            width: 400,
+            height: 300,
+            child: chartData.isEmpty
+                ? const Center(child: Text('Not enough data. Fill first two columns with labels and numbers.'))
+                : SfCartesianChart(
+                    primaryXAxis: const CategoryAxis(),
+                    series: <CartesianSeries>[
+                      ColumnSeries<Map<String, dynamic>, String>(
+                        dataSource: chartData,
+                        xValueMapper: (Map<String, dynamic> data, _) => data['category'] as String,
+                        yValueMapper: (Map<String, dynamic> data, _) => data['value'] as double,
+                        name: 'Data',
+                        color: Colors.green,
+                      )
+                    ],
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -364,11 +407,10 @@ class _SheetsPageState extends State<SheetsPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F2F1),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87),
           onPressed: () => CustomRoute.back(),
         ),
         title: SizedBox(
@@ -377,28 +419,28 @@ class _SheetsPageState extends State<SheetsPage> {
             controller: _titleController,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: theme.appBarTheme.foregroundColor ?? Colors.white,
+              fontSize: 18,
+              color: isDark ? Colors.white : Colors.black87,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
               hintText: 'Spreadsheet title...',
-              hintStyle: TextStyle(color: Colors.white54),
+              hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black38),
               isDense: true,
             ),
           ),
         ),
-        backgroundColor: Colors.green.shade700,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black.withOpacity(0.05),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded),
+            icon: Icon(Icons.add_circle_outline_rounded, color: isDark ? Colors.white70 : Colors.black87),
             onPressed: _addRow,
             tooltip: 'Add Row',
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded),
+            icon: Icon(Icons.more_vert_rounded, color: isDark ? Colors.white70 : Colors.black87),
             onSelected: (value) {
               switch (value) {
                 case 'save':
@@ -446,14 +488,19 @@ class _SheetsPageState extends State<SheetsPage> {
         children: [
           // ── Formula Bar ──
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark ? Colors.white10 : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade300, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-              ),
+              ],
             ),
             child: Row(
               children: [
@@ -464,7 +511,7 @@ class _SheetsPageState extends State<SheetsPage> {
                   decoration: BoxDecoration(
                     color: isDark
                         ? Colors.white.withOpacity(0.08)
-                        : Colors.grey.shade100,
+                        : Colors.green.shade50,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -473,7 +520,7 @@ class _SheetsPageState extends State<SheetsPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
-                      color: isDark ? Colors.white70 : Colors.grey.shade700,
+                      color: isDark ? Colors.white70 : Colors.green.shade700,
                     ),
                   ),
                 ),
@@ -540,16 +587,18 @@ class _SheetsPageState extends State<SheetsPage> {
 
           // ── Toolbar ──
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF1A1D2E)
-                  : const Color(0xFFF1F5F9),
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark ? Colors.white10 : Colors.grey.shade200,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-              ),
+              ],
             ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -613,9 +662,24 @@ class _SheetsPageState extends State<SheetsPage> {
 
           // ── Data Grid ──
           Expanded(
-            child: SfDataGrid(
-              source: _dataSource,
-              columnWidthMode: ColumnWidthMode.fill,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                child: SfDataGrid(
+                  source: _dataSource,
+                  columnWidthMode: ColumnWidthMode.fill,
               gridLinesVisibility: GridLinesVisibility.both,
               headerGridLinesVisibility: GridLinesVisibility.both,
               selectionMode: SelectionMode.single,
@@ -648,6 +712,8 @@ class _SheetsPageState extends State<SheetsPage> {
                     ),
                   )
                   .toList(),
+            ),
+              ),
             ),
           ),
 
@@ -807,15 +873,75 @@ class _SpreadsheetDataSource extends DataGridSource {
   @override
   List<DataGridRow> get rows => _rows;
 
+  String _evaluateFormula(String input) {
+    if (!input.startsWith('=')) return input;
+    
+    String formula = input.substring(1).toUpperCase().trim();
+    if (formula.startsWith('SUM(') && formula.endsWith(')')) {
+      final range = formula.substring(4, formula.length - 1).split(':');
+      if (range.length == 2) {
+        return _computeRange(range[0], range[1], (values) => values.fold(0.0, (a, b) => a + b));
+      }
+    } else if (formula.startsWith('AVERAGE(') && formula.endsWith(')')) {
+      final range = formula.substring(8, formula.length - 1).split(':');
+      if (range.length == 2) {
+        return _computeRange(range[0], range[1], (values) => values.isEmpty ? 0 : values.fold(0.0, (a, b) => a + b) / values.length);
+      }
+    } else if (formula.startsWith('COUNT(') && formula.endsWith(')')) {
+      final range = formula.substring(6, formula.length - 1).split(':');
+      if (range.length == 2) {
+        return _computeRange(range[0], range[1], (values) => values.length.toDouble());
+      }
+    }
+    
+    return '#UNKNOWN!'; // Basic fallback for unsupported formulas
+  }
+
+  String _computeRange(String start, String end, double Function(List<double>) operation) {
+    List<double> values = [];
+    final c1 = start.replaceAll(RegExp(r'[0-9]'), '');
+    final r1 = int.tryParse(start.replaceAll(RegExp(r'[A-Z]'), '')) ?? 1;
+    final c2 = end.replaceAll(RegExp(r'[0-9]'), '');
+    final r2 = int.tryParse(end.replaceAll(RegExp(r'[A-Z]'), '')) ?? 1;
+    
+    final colStartIdx = _columnNames.indexOf(c1);
+    final colEndIdx = _columnNames.indexOf(c2);
+    
+    if (colStartIdx >= 0 && colEndIdx >= 0 && r1 >= 1 && r2 >= 1) {
+      final actualColStart = colStartIdx < colEndIdx ? colStartIdx : colEndIdx;
+      final actualColEnd = colStartIdx > colEndIdx ? colStartIdx : colEndIdx;
+      final actualRowStart = r1 < r2 ? r1 : r2;
+      final actualRowEnd = r1 > r2 ? r1 : r2;
+      
+      for (int c = actualColStart; c <= actualColEnd; c++) {
+        for (int r = actualRowStart - 1; r < actualRowEnd; r++) {
+          if (r >= 0 && r < _cellData.length && c < _columnNames.length) {
+            String raw = _cellData[r][c];
+            // Resolve recursively in case pointing to another formula
+            String resolved = raw.startsWith('=') ? _evaluateFormula(raw) : raw;
+            final cellVal = double.tryParse(resolved);
+            if (cellVal != null) values.add(cellVal);
+          }
+        }
+      }
+    }
+    final result = operation(values);
+    // Return integer formatting if no decimals needed
+    return result == result.toInt() ? result.toInt().toString() : result.toStringAsFixed(2);
+  }
+
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     return DataGridRowAdapter(
       cells: row.getCells().map<Widget>((cell) {
+        String val = cell.value?.toString() ?? '';
+        String display = val.startsWith('=') ? _evaluateFormula(val) : val;
+        
         return Container(
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
-            cell.value?.toString() ?? '',
+            display,
             style: const TextStyle(fontSize: 13),
           ),
         );

@@ -167,11 +167,10 @@ class _DocsPageState extends State<DocsPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F2F1),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87),
           onPressed: () => CustomRoute.back(),
         ),
         title: SizedBox(
@@ -180,34 +179,35 @@ class _DocsPageState extends State<DocsPage> {
             controller: _titleController,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: theme.appBarTheme.foregroundColor ?? Colors.white,
+              fontSize: 18,
+              color: isDark ? Colors.white : Colors.black87,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
               hintText: 'Document title...',
-              hintStyle: TextStyle(color: Colors.white54),
+              hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black38),
               isDense: true,
-              contentPadding: EdgeInsets.symmetric(vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
             ),
           ),
         ),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black.withOpacity(0.05),
         actions: [
           IconButton(
-            icon: const Icon(Icons.undo_rounded),
+            icon: Icon(Icons.undo_rounded, color: isDark ? Colors.white70 : Colors.black54),
             onPressed: () => _controller.undo(),
             tooltip: 'Undo',
           ),
           IconButton(
-            icon: const Icon(Icons.redo_rounded),
+            icon: Icon(Icons.redo_rounded, color: isDark ? Colors.white70 : Colors.black54),
             onPressed: () => _controller.redo(),
             tooltip: 'Redo',
           ),
+
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded),
+            icon: Icon(Icons.more_vert_rounded, color: isDark ? Colors.white70 : Colors.black87),
             onSelected: (value) {
               switch (value) {
                 case 'save':
@@ -255,13 +255,17 @@ class _DocsPageState extends State<DocsPage> {
         children: [
           // ── Formatting Toolbar ──
           Container(
+            margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark ? Colors.white10 : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-              ),
+              ],
             ),
             child: QuillSimpleToolbar(
               controller: _controller,
@@ -293,23 +297,22 @@ class _DocsPageState extends State<DocsPage> {
           // ── Editor Area ──
           Expanded(
             child: Container(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              color: Colors.transparent, // Uses Scaffold background (F3F2F1/0F172A)
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 816),
                   child: Container(
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 24, horizontal: 16),
+                    margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                    clipBehavior: Clip.hardEdge,
                     decoration: BoxDecoration(
-                      color:
-                          isDark ? const Color(0xFF0F172A) : Colors.white,
-                      borderRadius: BorderRadius.circular(4),
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: BorderRadius.circular(2),
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              Colors.black.withOpacity(isDark ? 0.3 : 0.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(isDark ? 0.5 : 0.12),
+                          blurRadius: 24,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
@@ -319,7 +322,7 @@ class _DocsPageState extends State<DocsPage> {
                       scrollController: _editorScrollController,
                       config: QuillEditorConfig(
                         placeholder: 'Start typing...',
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(48),
                         expands: true,
                       ),
                     ),

@@ -490,27 +490,24 @@ class _FileManagerPageState extends State<FileManagerPage>
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F2F1),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87),
           onPressed: () => CustomRoute.back(),
         ),
-        title: const Text('File Manager'),
-        backgroundColor: Colors.blueGrey.shade700,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        title: Text('File Manager', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600)),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black.withOpacity(0.05),
         actions: [
           IconButton(
-            icon: Icon(_isGridView
-                ? Icons.view_list_rounded
-                : Icons.grid_view_rounded),
+            icon: Icon(_isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded, color: isDark ? Colors.white70 : Colors.black87),
             onPressed: () => setState(() => _isGridView = !_isGridView),
             tooltip: _isGridView ? 'List view' : 'Grid view',
           ),
           IconButton(
-            icon: const Icon(Icons.sort_rounded),
+            icon: Icon(Icons.sort_rounded, color: isDark ? Colors.white70 : Colors.black87),
             onPressed: _showSortOptions,
             tooltip: 'Sort',
           ),
@@ -731,7 +728,7 @@ class _FileManagerPageState extends State<FileManagerPage>
             OutlinedButton.icon(
               onPressed: _showCreateDialog,
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Create New'),
+              label: const Text('Create New Workflow'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: ColorConst.violate,
                 side: BorderSide(color: ColorConst.violate.withOpacity(0.5)),
@@ -847,51 +844,57 @@ class _FileGridTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? Colors.white10 : file.color.withOpacity(0.12),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          borderRadius: BorderRadius.circular(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: file.color.withOpacity(isDark ? 0.2 : 0.1),
+                  color: file.color.withOpacity(isDark ? 0.15 : 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(file.icon, size: 28, color: file.color),
+                child: Icon(file.icon, size: 36, color: file.color),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
                   file.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 file.type.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
                   color: isDark ? Colors.white38 : Colors.grey.shade500,
                 ),
               ),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:nextoffice/features/shared/data/local_storage_service.dart';
 import 'package:nextoffice/navigation/custom_router/custom_route.dart';
 import 'package:nextoffice/shared/constants/color_const.dart';
@@ -463,11 +464,10 @@ class _SlidesPageState extends State<SlidesPage> {
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F2F1),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87),
           onPressed: () => CustomRoute.back(),
         ),
         title: SizedBox(
@@ -476,31 +476,40 @@ class _SlidesPageState extends State<SlidesPage> {
             controller: _titleController,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: theme.appBarTheme.foregroundColor ?? Colors.white,
+              fontSize: 18,
+              color: isDark ? Colors.white : Colors.black87,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
               hintText: 'Presentation title...',
-              hintStyle: TextStyle(color: Colors.white54),
+              hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black38),
               isDense: true,
-              contentPadding: EdgeInsets.symmetric(vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
             ),
           ),
         ),
-        backgroundColor: Colors.orange.shade800,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black.withOpacity(0.05),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save_rounded),
+            icon: Icon(Icons.save_rounded, color: isDark ? Colors.white70 : Colors.black54),
             onPressed: _savePresentation,
             tooltip: 'Save',
           ),
-          IconButton(
-            icon: const Icon(Icons.play_arrow_rounded),
-            onPressed: _presentSlides,
-            tooltip: 'Present',
+          Container(
+            height: 36,
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            child: FilledButton.icon(
+              onPressed: _presentSlides,
+              icon: const Icon(Icons.play_arrow_rounded, size: 16),
+              label: const Text('Present'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.orange.shade700,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -509,14 +518,18 @@ class _SlidesPageState extends State<SlidesPage> {
         children: [
           // ── Toolbar ──
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark ? Colors.white10 : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-              ),
+              ],
             ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -528,14 +541,14 @@ class _SlidesPageState extends State<SlidesPage> {
                   _ToolButton(
                       Icons.crop_square_rounded, 'Shape', isDark, _addShape),
                   _ToolButton(Icons.bar_chart_rounded, 'Chart', isDark, () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Chart insertion — coming soon'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    );
+                    setState(() {
+                      _slides[_selectedSlide].elements.add({
+                        'type': 'chart',
+                        'chartType': 'bar',
+                        'x': 0.2,
+                        'y': 0.2,
+                      });
+                    });
                   }),
                   const SizedBox(width: 8),
                   Container(width: 1, height: 28, color: isDark ? Colors.white12 : Colors.grey.shade300),
@@ -543,12 +556,43 @@ class _SlidesPageState extends State<SlidesPage> {
                   _ToolButton(Icons.palette_rounded, 'Theme', isDark,
                       _showThemePicker),
                   _ToolButton(Icons.animation_rounded, 'Animate', isDark, () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Animations — coming soon'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Slide Transition'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              title: const Text('None'),
+                              onTap: () {
+                                setState(() => _slides[_selectedSlide].transition = 'none');
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                            ListTile(
+                              title: const Text('Fade'),
+                              onTap: () {
+                                setState(() => _slides[_selectedSlide].transition = 'fade');
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                            ListTile(
+                              title: const Text('Slide Right'),
+                              onTap: () {
+                                setState(() => _slides[_selectedSlide].transition = 'slideRight');
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                            ListTile(
+                              title: const Text('Scale'),
+                              onTap: () {
+                                setState(() => _slides[_selectedSlide].transition = 'scale');
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }),
@@ -674,22 +718,22 @@ class _SlidesPageState extends State<SlidesPage> {
                 // Canvas
                 Expanded(
                   child: Container(
-                    color: isDark
-                        ? const Color(0xFF0B0F1A)
-                        : const Color(0xFFE2E8F0),
-                    padding: const EdgeInsets.all(24),
+                    color: Colors.transparent, // Inherits Scaffold background
+                    padding: const EdgeInsets.all(32),
                     child: Center(
                       child: AspectRatio(
                         aspectRatio: 16 / 9,
                         child: Container(
+                          clipBehavior: Clip.hardEdge,
                           decoration: BoxDecoration(
                             color: _slides[_selectedSlide].bgColor,
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
+                                color: Colors.black.withOpacity(isDark ? 0.5 : 0.15),
+                                blurRadius: 32,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 16),
                               ),
                             ],
                           ),
@@ -744,18 +788,31 @@ class _SlidesPageState extends State<SlidesPage> {
                                   .map(
                                 (entry) {
                                   final elem = entry.value;
-                                  final x =
-                                      (elem['x'] as double?) ?? 0.5;
-                                  final y =
-                                      (elem['y'] as double?) ?? 0.5;
+                                  final x = (elem['x'] as double?) ?? 0.5;
+                                  final y = (elem['y'] as double?) ?? 0.5;
+                                  final scale = (elem['scale'] as double?) ?? 1.0;
                                   return Positioned(
                                     left: x * 100,
                                     top: y * 100,
                                     child: GestureDetector(
-                                      onTap: () =>
-                                          _showElementOptions(entry.key),
-                                      child:
-                                          _buildElement(elem),
+                                      onTap: () => _showElementOptions(entry.key),
+                                      onScaleUpdate: (details) {
+                                        setState(() {
+                                          if (details.scale == 1.0 && details.rotation == 0.0) {
+                                            // Panning
+                                            elem['x'] = x + (details.focalPointDelta.dx / 100);
+                                            elem['y'] = y + (details.focalPointDelta.dy / 100);
+                                          } else {
+                                            // Pinch Zooming (using relative multiplication hack for continuous tracking)
+                                            // Note: real implementations track base scale, this is an approximate dynamic effect
+                                            elem['scale'] = scale * (details.scale > 1.0 ? 1.02 : 0.98);
+                                          }
+                                        });
+                                      },
+                                      child: Transform.scale(
+                                        scale: scale,
+                                        child: _buildElement(elem),
+                                      ),
                                     ),
                                   );
                                 },
@@ -980,6 +1037,28 @@ class _SlidesPageState extends State<SlidesPage> {
               : Image.file(File(path), fit: BoxFit.cover),
         ),
       );
+    } else if (type == 'chart') {
+      return Container(
+        width: 250,
+        height: 180,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: SfCartesianChart(
+          primaryXAxis: const CategoryAxis(),
+          series: <CartesianSeries>[
+            ColumnSeries<int, String>(
+              dataSource: const [10, 20, 30, 40],
+              xValueMapper: (int data, int index) => 'C${index + 1}',
+              yValueMapper: (int data, _) => data,
+              color: Colors.orange.shade700,
+            )
+          ],
+        ),
+      );
     }
     return const SizedBox.shrink();
   }
@@ -1034,35 +1113,69 @@ class _PresentationViewState extends State<_PresentationView> {
         },
         child: Stack(
           children: [
-            Center(
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Container(
-                  color: slide.bgColor,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 600),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                final key = child.key as ValueKey<int>?;
+                final slideIdx = key?.value ?? 0;
+                final transition = widget.slides[slideIdx].transition;
+                if (transition == 'fade') {
+                  return FadeTransition(opacity: animation, child: child);
+                } else if (transition == 'slideRight') {
+                  final offsetAnimation = Tween<Offset>(
+                    begin: const Offset(-1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(animation);
+                  return SlideTransition(position: offsetAnimation, child: child);
+                } else if (transition == 'scale') {
+                  return ScaleTransition(scale: animation, child: child);
+                }
+                return child; // none
+              },
+              child: Center(
+                key: ValueKey<int>(_current),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    color: slide.bgColor,
+                    child: Stack(
                       children: [
-                        Text(
-                          slide.title,
-                          style: TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            color: isLight
-                                ? const Color(0xFF1E293B)
-                                : Colors.white,
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                slide.title,
+                                style: TextStyle(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  color: isLight
+                                      ? const Color(0xFF1E293B)
+                                      : Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                slide.subtitle,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: isLight ? Colors.grey : Colors.white70,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          slide.subtitle,
-                          style: TextStyle(
-                            fontSize: 24,
-                            color: isLight ? Colors.grey : Colors.white70,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        ...slide.elements.map((elem) {
+                          final x = (elem['x'] as double?) ?? 0.5;
+                          final y = (elem['y'] as double?) ?? 0.5;
+                          return Positioned(
+                            left: x * 100,
+                            top: y * 100,
+                            child: _buildElementStatic(elem, isLight),
+                          );
+                        }),
                       ],
                     ),
                   ),
@@ -1122,16 +1235,87 @@ class _PresentationViewState extends State<_PresentationView> {
 
 // ━━━━━━━━━━━━━━━━━━━━ Helpers ━━━━━━━━━━━━━━━━━━━━
 
+  Widget _buildElementStatic(Map<String, dynamic> elem, bool isLightBg) {
+    final type = elem['type'] as String;
+    if (type == 'text') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        ),
+        child: Text(
+          elem['content'] ?? '',
+          style: TextStyle(
+            color: isLightBg ? Colors.black87 : Colors.white,
+          ),
+        ),
+      );
+    } else if (type == 'shape') {
+      final shape = elem['shape'] as String;
+      final color = Color(elem['color'] as int);
+      if (shape == 'circle') {
+        return Container(
+          width: 60, height: 60,
+          decoration: BoxDecoration(color: color.withOpacity(0.3), shape: BoxShape.circle, border: Border.all(color: color, width: 2)),
+        );
+      } else if (shape == 'triangle') {
+        return CustomPaint(size: const Size(60, 50), painter: _TrianglePainter(color: color));
+      } else {
+        return Container(
+          width: 80, height: 50,
+          decoration: BoxDecoration(color: color.withOpacity(0.3), borderRadius: BorderRadius.circular(4), border: Border.all(color: color, width: 2)),
+        );
+      }
+    } else if (type == 'image') {
+      final path = elem['path'] as String;
+      return Container(
+        width: 150, height: 150,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: Colors.blue.withOpacity(0.3))),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: path.startsWith('http') ? Image.network(path, fit: BoxFit.cover) : Image.file(File(path), fit: BoxFit.cover),
+        ),
+      );
+    } else if (type == 'chart') {
+      return Container(
+        width: 250,
+        height: 180,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: SfCartesianChart(
+          primaryXAxis: const CategoryAxis(),
+          series: <CartesianSeries>[
+            ColumnSeries<int, String>(
+              dataSource: const [10, 20, 30, 40],
+              xValueMapper: (int data, int index) => 'C${index + 1}',
+              yValueMapper: (int data, _) => data,
+              color: Colors.orange.shade700,
+            )
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
 class _SlideData {
   String title;
   String subtitle;
   Color bgColor;
+  String transition;
   List<Map<String, dynamic>> elements;
 
   _SlideData({
     required this.title,
     required this.subtitle,
     required this.bgColor,
+    this.transition = 'none',
     required this.elements,
   });
 
@@ -1139,6 +1323,7 @@ class _SlideData {
         'title': title,
         'subtitle': subtitle,
         'bgColor': bgColor.value,
+        'transition': transition,
         'elements': elements,
       };
 
@@ -1146,6 +1331,7 @@ class _SlideData {
         title: json['title'] as String,
         subtitle: json['subtitle'] as String,
         bgColor: Color(json['bgColor'] as int),
+        transition: json['transition'] as String? ?? 'none',
         elements: List<Map<String, dynamic>>.from(json['elements']),
       );
 }
